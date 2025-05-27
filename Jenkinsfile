@@ -42,9 +42,6 @@ pipeline {
         }
 
         stage('Deploy to QA') {
-            when {
-                branch 'qa'
-            }
             steps {
                 sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace qa'
             }
