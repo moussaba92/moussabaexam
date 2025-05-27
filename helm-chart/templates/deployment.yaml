@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moussaba-app
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: moussaba-app
+  template:
+    metadata:
+      labels:
+        app: moussaba-app
+    spec:
+      containers:
+        - name: moussaba-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 80
