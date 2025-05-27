@@ -8,6 +8,12 @@ pipeline {
     }
 
     stages {
+        stage('Debug Branch') {
+            steps {
+                echo "📌 Branche active : ${env.BRANCH_NAME}"
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -18,6 +24,7 @@ pipeline {
             steps {
                 script {
                     dockerImage = docker.build("${IMAGE_NAME}:${DOCKER_TAG}")
+                    echo "✅ Image construite : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
@@ -27,7 +34,11 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
                         dockerImage.push()
+                        dockerImage.push("latest")
                     }
+                    echo "📦 Image poussée avec succès :"
+                    echo "- ${IMAGE_NAME}:${DOCKER_TAG}"
+                    echo "- ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -37,12 +48,17 @@ pipeline {
                 branch 'develop'
             }
             steps {
+                echo "🚀 Déploiement dans namespace : dev"
                 sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace dev'
             }
         }
 
         stage('Deploy to QA') {
+            when {
+                branch 'qa'
+            }
             steps {
+                echo "🚀 Déploiement dans namespace : qa"
                 sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace qa'
             }
         }
@@ -52,6 +68,7 @@ pipeline {
                 branch 'staging'
             }
             steps {
+                echo "🚀 Déploiement dans namespace : staging"
                 sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace staging'
             }
         }
@@ -61,7 +78,8 @@ pipeline {
                 branch 'master'
             }
             steps {
-                input message: 'Déployer en production ?'
+                input message: '✅ Déployer manuellement en production ?'
+                echo "🚀 Déploiement dans namespace : prod"
                 sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace prod'
             }
         }
@@ -72,7 +90,7 @@ pipeline {
             echo "✅ Pipeline terminé avec succès sur la branche ${env.BRANCH_NAME}"
         }
         failure {
-            echo "❌ Échec du pipeline sur ${env.BRANCH_NAME}"
+            echo "❌ Échec du pipeline sur la branche ${env.BRANCH_NAME}"
         }
     }
 }
