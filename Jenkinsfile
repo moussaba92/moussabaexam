@@ -32,7 +32,6 @@ pipeline {
         }
 
         stage('Deploy to Dev') {
-            when { branch 'develop' }
             steps {
                 sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace dev'
             }
