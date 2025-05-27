@@ -9,4 +9,12 @@ service:
   type: ClusterIP
   port: 80
 
-resources: {}
+containerPort: 80
+
+resources:
+  limits:
+    memory: 256Mi
+    cpu: 500m
+  requests:
+    memory: 128Mi
+    cpu: 250m
