@@ -1,0 +1,12 @@
+replicaCount: 1
+
+image:
+  repository: moussaba78/app-moussaba-exam
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
