@@ -2,21 +2,22 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS = credentials('dockerhub-creds')
-        IMAGE_NAME = 'moussaba78/app-moussaba-exam'
+        DOCKER_CREDS = credentials('dockerhub-creds')
+        IMAGE_NAME = "moussaba78/app-moussaba-exam"
+        DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${env.BRANCH_NAME}", url: 'https://github.com/moussaba92/moussabaexam.git'
+                checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${IMAGE_NAME}:${env.BUILD_NUMBER}")
+                    dockerImage = docker.build("${IMAGE_NAME}:${DOCKER_TAG}")
                 }
             }
         }
@@ -24,40 +25,46 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
                         dockerImage.push()
                     }
                 }
             }
         }
 
-        stage('Deploy to Dev') {
-            when { branch 'develop' }
+        stage('Deploy to Kubernetes') {
             steps {
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace dev'
+                script {
+                    def helmNamespace = env.BRANCH_NAME
+                    sh """
+                        helm upgrade --install app-moussaba-exam ./helm-chart \
+                          --namespace ${helmNamespace} \
+                          --create-namespace \
+                          --set image.repository=${IMAGE_NAME} \
+                          --set image.tag=${DOCKER_TAG} \
+                          --set service.type=NodePort \
+                          --set service.nodePort=30080
+                    """
+                }
             }
         }
 
-        stage('Deploy to QA') {
-            when { branch 'qa' }
+        stage('Manual Approval for Prod') {
+            when {
+                branch 'master'
+            }
             steps {
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace qa'
+                input message: 'Confirmer le déploiement en production ?'
             }
         }
+    }
 
-        stage('Deploy to Staging') {
-            when { branch 'staging' }
-            steps {
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace staging'
-            }
+    post {
+        success {
+            echo "✅ Pipeline réussi sur ${env.BRANCH_NAME}"
         }
-
-        stage('Manual Prod Deploy') {
-            when { branch 'master' }
-            steps {
-                input "Déployer manuellement en production ?"
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace prod'
-            }
+        failure {
+            echo "❌ Pipeline échoué sur ${env.BRANCH_NAME}"
         }
     }
 }
