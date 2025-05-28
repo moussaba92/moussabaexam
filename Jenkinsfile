@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDS = credentials('dockerhub-creds')
         IMAGE_NAME = "moussaba78/app-moussaba-exam"
         DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
@@ -11,9 +10,9 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                cleanWs() // Nettoyage du workspace Jenkins
+                cleanWs() // 🔥 Nettoyage du workspace Jenkins
                 checkout scm
-                sh 'ls -la' // Debug : voir les fichiers clonés
+                sh 'ls -la' // 🧪 Debug : voir les fichiers clonés
             }
         }
 
@@ -27,13 +26,16 @@ pipeline {
         }
 
         stage('Push to DockerHub') {
+            environment {
+                DOCKERHUB_CREDS = credentials('moussaba78') // ✅ Ton ID Jenkins
+            }
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDS) {
                         dockerImage.push()
-                        dockerImage.push('latest') // (optionnel)
+                        dockerImage.push('latest')
                     }
-                    echo "Image poussée : ${IMAGE_NAME}:${DOCKER_TAG}"
+                    echo "🚀 Image poussée : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
@@ -51,7 +53,7 @@ pipeline {
                           --set service.type=NodePort \
                           --set service.nodePort=30080
                     """
-                    echo "Déployé dans le namespace ${helmNamespace}"
+                    echo "📦 Déployé dans le namespace ${helmNamespace}"
                 }
             }
         }
@@ -61,17 +63,17 @@ pipeline {
                 branch 'master'
             }
             steps {
-                input message: 'Confirmer le déploiement en production ?'
+                input message: '✅ Confirmer le déploiement en production ?'
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline réussi sur ${env.BRANCH_NAME}"
+            echo "✅ Pipeline réussi sur ${env.BRANCH_NAME}"
         }
         failure {
-            echo "Pipeline échoué sur ${env.BRANCH_NAME}"
+            echo "❌ Pipeline échoué sur ${env.BRANCH_NAME}"
         }
     }
 }
