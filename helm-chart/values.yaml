@@ -2,10 +2,9 @@ replicaCount: 1
 
 image:
   repository: moussaba78/app-moussaba-exam
-  tag: latest
-  pullPolicy: IfNotPresent
+  tag: develop-23
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 8000
   nodePort: 30080
