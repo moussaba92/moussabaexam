@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        DOCKER_CREDS = credentials('moussaba78') // 👈 Ton ID Jenkins
         IMAGE_NAME = "moussaba78/app-moussaba-exam"
         DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
@@ -19,19 +20,19 @@ pipeline {
             steps {
                 script {
                     dockerImage = docker.build("${IMAGE_NAME}:${DOCKER_TAG}")
+                    echo "🛠️ Image construite : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
 
         stage('Push to DockerHub') {
-            environment {
-                DOCKER_CREDS = credentials('moussaba78')  // Ton ID Jenkins pour DockerHub
-            }
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
                         dockerImage.push()
+                        dockerImage.push("latest")
                     }
+                    echo "📤 Image poussée sur DockerHub"
                 }
             }
         }
@@ -65,10 +66,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline réussi sur ${env.BRANCH_NAME}"
+            echo "✅ Pipeline réussi sur ${env.BRANCH_NAME}"
         }
         failure {
-            echo "Pipeline échoué sur ${env.BRANCH_NAME}"
+            echo "❌ Pipeline échoué sur ${env.BRANCH_NAME}"
         }
     }
 }
