@@ -3,21 +3,23 @@ pipeline {
 
     environment {
         IMAGE_NAME = "moussaba78/app-moussaba-exam"
-        DOCKERHUB_TOKEN = credentials('moussaba78') // 
+        DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                cleanWs() // 🔄 Nettoyage du workspace
+                cleanWs()
                 checkout scm
-                sh 'ls -la' // 📁 Debug : vérifier les fichiers clonés
+                sh 'ls -la'
             }
         }
 
         stage('Docker Login') {
             steps {
-                sh 'echo "$DOCKERHUB_TOKEN" | docker login -u "$NOM" --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+                }
             }
         }
 
@@ -34,7 +36,7 @@ pipeline {
             steps {
                 script {
                     dockerImage.push()
-                    dockerImage.push('latest') // (optionnel)
+                    dockerImage.push("latest")
                     echo "🚀 Image poussée : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
