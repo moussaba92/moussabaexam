@@ -8,9 +8,12 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
+                cleanWs() // Nettoyage du workspace Jenkins
                 checkout scm
+                sh 'ls -la' // Debug : voir les fichiers clonés
             }
         }
 
@@ -18,6 +21,7 @@ pipeline {
             steps {
                 script {
                     dockerImage = docker.build("${IMAGE_NAME}:${DOCKER_TAG}")
+                    echo "🛠️ Image construite : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
@@ -27,7 +31,9 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
                         dockerImage.push()
+                        dockerImage.push('latest') // (optionnel)
                     }
+                    echo "Image poussée : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
@@ -45,6 +51,7 @@ pipeline {
                           --set service.type=NodePort \
                           --set service.nodePort=30080
                     """
+                    echo "Déployé dans le namespace ${helmNamespace}"
                 }
             }
         }
@@ -61,10 +68,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline réussi sur ${env.BRANCH_NAME}"
+            echo "Pipeline réussi sur ${env.BRANCH_NAME}"
         }
         failure {
-            echo "❌ Pipeline échoué sur ${env.BRANCH_NAME}"
+            echo "Pipeline échoué sur ${env.BRANCH_NAME}"
         }
     }
 }
