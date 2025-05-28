@@ -10,9 +10,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                cleanWs() // 🔥 Nettoie le workspace Jenkins
+                cleanWs() //  Nettoie le workspace Jenkins
                 checkout scm
-                sh 'ls -la' // 🧪 Affiche les fichiers clonés (debug)
+                sh 'ls -la' //  Affiche les fichiers clonés (debug)
             }
         }
 
@@ -31,7 +31,7 @@ pipeline {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
                         def dockerImage = docker.image("${IMAGE_NAME}:${DOCKER_TAG}")
                         dockerImage.push()
-                        echo "📤 Image poussée sur DockerHub"
+                        echo " Image poussée sur DockerHub"
                     }
                 }
             }
@@ -66,10 +66,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline réussi sur ${env.BRANCH_NAME}"
+            echo " Pipeline réussi sur ${env.BRANCH_NAME}"
         }
         failure {
-            echo "❌ Pipeline échoué sur ${env.BRANCH_NAME}"
+            echo " Pipeline échoué sur ${env.BRANCH_NAME}"
         }
     }
 }
