@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "moussaba78/app-moussaba-exam"
-        DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-        DOCKERHUB_TOKEN = credentials('moussaba78') // Moussaba1992
+        DOCKERHUB_TOKEN = credentials('moussaba78') // 
     }
 
     stages {
