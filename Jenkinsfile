@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 cleanWs() // 🔥 Nettoyage du workspace Jenkins
@@ -26,13 +27,13 @@ pipeline {
 
         stage('Push to DockerHub') {
             environment {
-                DOCKERHUB_CREDS = credentials('moussaba78')
+                DOCKERHUB_CREDS = credentials('moussaba78') // ✅ Ton ID Jenkins
             }
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDS) {
                         dockerImage.push()
-                        dockerImage.push('latest') // (optionnel)
+                        dockerImage.push('latest')
                     }
                     echo "🚀 Image poussée : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
