@@ -1,17 +1,13 @@
-# Utilise une image officielle Node.js légère
-FROM node:18-alpine
+FROM python:3.8-slim
 
-# Dossier de travail dans le conteneur
 WORKDIR /app
 
-# Copie les fichiers du projet
+COPY requirements.txt .
+
+RUN apt-get update \
+    && apt-get install -y gcc \
+    && pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# Installe les dépendances
-RUN npm install
-
-# Expose le port (modifie-le si ton app utilise un autre)
-EXPOSE 3000
-
-# Démarre l'application
-CMD ["npm", "start"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
