@@ -55,7 +55,6 @@ pipeline {
                           --set service.type=NodePort \
                           --set service.nodePort=30080
                     """
-                    echo "📦 Déployé dans le namespace ${helmNamespace}"
                 }
             }
         }
