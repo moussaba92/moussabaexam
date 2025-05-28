@@ -1,0 +1,5 @@
+apiVersion: v2
+name: app-moussaba-exam
+description: Helm chart for deploying the app-moussaba-exam application
+version: 0.1.0
+appVersion: "1.0.0"
