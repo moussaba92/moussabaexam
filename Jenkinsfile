@@ -4,15 +4,22 @@ pipeline {
     environment {
         IMAGE_NAME = "moussaba78/app-moussaba-exam"
         DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+        DOCKERHUB_TOKEN = credentials('moussaba78') // 🔐 Ton secret token
+        NOM = "moussaba78"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                cleanWs() // 🔥 Nettoyage du workspace Jenkins
+                cleanWs() // 🔄 Nettoyage du workspace
                 checkout scm
-                sh 'ls -la' // 🧪 Debug : voir les fichiers clonés
+                sh 'ls -la' // 📁 Debug : vérifier les fichiers clonés
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                sh 'echo "$DOCKERHUB_TOKEN" | docker login -u "$NOM" --password-stdin'
             }
         }
 
@@ -26,15 +33,10 @@ pipeline {
         }
 
         stage('Push to DockerHub') {
-            environment {
-                DOCKERHUB_CREDS = credentials('moussaba78') // ✅ Ton ID Jenkins
-            }
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDS) {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
+                    dockerImage.push()
+                    dockerImage.push('latest') // (optionnel)
                     echo "🚀 Image poussée : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
