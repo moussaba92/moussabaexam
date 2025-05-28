@@ -8,12 +8,6 @@ pipeline {
     }
 
     stages {
-        stage('Debug Branch') {
-            steps {
-                echo "📌 Branche active : ${env.BRANCH_NAME}"
-            }
-        }
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -24,7 +18,6 @@ pipeline {
             steps {
                 script {
                     dockerImage = docker.build("${IMAGE_NAME}:${DOCKER_TAG}")
-                    echo "✅ Image construite : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
@@ -34,63 +27,44 @@ pipeline {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
                         dockerImage.push()
-                        dockerImage.push("latest")
                     }
-                    echo "📦 Image poussée avec succès :"
-                    echo "- ${IMAGE_NAME}:${DOCKER_TAG}"
-                    echo "- ${IMAGE_NAME}:latest"
                 }
             }
         }
 
-        stage('Deploy to Dev') {
-            when {
-                branch 'develop'
-            }
+        stage('Deploy to Kubernetes') {
             steps {
-                echo "🚀 Déploiement dans namespace : dev"
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace dev'
+                script {
+                    def helmNamespace = env.BRANCH_NAME
+                    sh """
+                        helm upgrade --install app-moussaba-exam ./helm-chart \
+                          --namespace ${helmNamespace} \
+                          --create-namespace \
+                          --set image.repository=${IMAGE_NAME} \
+                          --set image.tag=${DOCKER_TAG} \
+                          --set service.type=NodePort \
+                          --set service.nodePort=30080
+                    """
+                }
             }
         }
 
-        stage('Deploy to QA') {
-            when {
-                branch 'qa'
-            }
-            steps {
-                echo "🚀 Déploiement dans namespace : qa"
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace qa'
-            }
-        }
-
-        stage('Deploy to Staging') {
-            when {
-                branch 'staging'
-            }
-            steps {
-                echo "🚀 Déploiement dans namespace : staging"
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace staging'
-            }
-        }
-
-        stage('Deploy to Prod (Manual)') {
+        stage('Manual Approval for Prod') {
             when {
                 branch 'master'
             }
             steps {
-                input message: '✅ Déployer manuellement en production ?'
-                echo "🚀 Déploiement dans namespace : prod"
-                sh 'helm upgrade --install app-moussaba-exam ./helm-chart --namespace prod'
+                input message: 'Confirmer le déploiement en production ?'
             }
         }
     }
 
     post {
         success {
-            echo "✅ Pipeline terminé avec succès sur la branche ${env.BRANCH_NAME}"
+            echo "✅ Pipeline réussi sur ${env.BRANCH_NAME}"
         }
         failure {
-            echo "❌ Échec du pipeline sur la branche ${env.BRANCH_NAME}"
+            echo "❌ Pipeline échoué sur ${env.BRANCH_NAME}"
         }
     }
 }
