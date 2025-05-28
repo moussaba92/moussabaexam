@@ -10,14 +10,17 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                cleanWs() // 🔥 Nettoie le workspace Jenkins
                 checkout scm
+                sh 'ls -la' // 🧪 Affiche les fichiers clonés (debug)
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${IMAGE_NAME}:${DOCKER_TAG}")
+                    def dockerImage = docker.build("${IMAGE_NAME}:${DOCKER_TAG}")
+                    echo "🛠️ Image construite : ${IMAGE_NAME}:${DOCKER_TAG}"
                 }
             }
         }
@@ -26,7 +29,9 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDS) {
+                        def dockerImage = docker.image("${IMAGE_NAME}:${DOCKER_TAG}")
                         dockerImage.push()
+                        echo "📤 Image poussée sur DockerHub"
                     }
                 }
             }
