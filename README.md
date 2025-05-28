@@ -4,7 +4,7 @@ Ce projet met en place un pipeline CI/CD complet avec Jenkins multibranch, Docke
 
 ---
 
-## 🔧 Technologies utilisées
+## Technologies utilisées
 
 - Jenkins (Multibranch Pipeline)
 - Docker & DockerHub
@@ -12,18 +12,3 @@ Ce projet met en place un pipeline CI/CD complet avec Jenkins multibranch, Docke
 - Helm v3
 - Kubernetes (via kind)
 - NGINX Ingress (pour accès local)
-
----
-
-## 🚀 Environnements de déploiement
-
-| Branche Git | Environnement K8s | Namespace Kubernetes |
-|-------------|--------------------|----------------------|
-| `develop`   | Développement       | `dev`                |
-| `qa`        | Qualité             | `qa`                 |
-| `staging`   | Préproduction       | `staging`            |
-| `master`    | Production (manuel) | `prod`               |
-
----
-
-## 📦 Structure du projet
